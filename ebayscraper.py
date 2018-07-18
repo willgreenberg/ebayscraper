@@ -23,11 +23,15 @@ api = Finding(appid='WillGree-Scraper-PRD-d8bba853c-c16e72d4', config_file=None)
 searchRequest = { 
 	'keywords':Keywords,
 	'outputSelector':'SellerInfo',
-	'paginationInput': { 'entriesPerPage':100 }
+	'paginationInput': { 'entriesPerPage':100 },
+	# 'itemFilter': { 'HideDuplicateItems':True }
 }
 
-# Execute the first search call to eBay
-response = api.execute('findItemsByKeywords', searchRequest)
+try:
+	# Execute the first search call to eBay
+	response = api.execute('findItemsByKeywords', searchRequest)
+except ConnectionError as e:
+	print(e)
 
 # Parse the raw HTML response, and retrieve the response object as a dictionary (might not need soup?)
 responseSoup = soup(response.content, 'html.parser')
@@ -43,20 +47,22 @@ currPage = responseDict['paginationOutput']['pageNumber']
 
 # DEBUG - print search information
 print("Number of Total Pages to Search: " + str(numTotalPages))
-print("Number of Total Entries: " + str(numTotalEntries))
+print("Number of Total Entries: " + numTotalEntries)
 print("Current Page: " + str(currPage))
 
 # Loop over subsequent pages in the search, 100 entries per page
-for page in numTotalPages:
-	response = api.next_page()
-	responseSoup = soup(response.content, 'html.parser')
-	responseDict = response.dict()
-	newItems = responseSoup.find_all('item')
-	items += newItems
+for page in range(1, 10):
+	try:
+		response = api.next_page()
+		responseSoup = soup(response.content, 'html.parser')
+		responseDict = response.dict()
+		newItems = responseSoup.find_all('item')
+		items += newItems
 
-	currPage = responseDict['paginationOutput']['pageNumber']
-	print("Current Page: " + str(currPage))
-
+		currPage = responseDict['paginationOutput']['pageNumber']
+		print("Current Page: " + str(currPage))
+	except ConnectionError as e:
+		print(e)
 
 # DEBUG
 # print(soup.text + "\n")
@@ -70,6 +76,7 @@ print("Number of items: " + str(len(items)))
 count = 1
 for item in items:
 	print(str(count), ": ", item.title.string)
+	print("     Price: $" + item.currentprice.string, sep='')
 	count += 1
 
 
