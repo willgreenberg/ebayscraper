@@ -1,4 +1,4 @@
-# eBay Data Miner
+# eBay Scraper
 # By Will Greenberg
 # July 17, 2018
 
@@ -23,6 +23,7 @@ api = Finding(appid='WillGree-Scraper-PRD-d8bba853c-c16e72d4', config_file=None)
 searchRequest = { 
 	'keywords':Keywords,
 	'outputSelector':'SellerInfo',
+	'outputSelector':'AspectHistogram',
 	'paginationInput': { 'entriesPerPage':100 },
 	# 'itemFilter': { 'HideDuplicateItems':True }
 }
@@ -39,6 +40,8 @@ responseDict = response.dict()
 
 # Extract all 'items' from the parsed response
 items = responseSoup.find_all('item')
+
+aspects = responseSoup.find_all('aspect')
 
 # Extract search information from responseDict
 numTotalPages = responseDict['paginationOutput']['totalPages']
@@ -69,15 +72,28 @@ for page in range(1, 10):
 # totalentries = int(soup.find('totalentries').text)
 # print(str(totalentries) + "\n")
 
-# # DEBUG
+# DEBUG
 print("Number of items: " + str(len(items)))
 
-# DEBUG - list out item information
-count = 1
-for item in items:
-	print(str(count), ": ", item.title.string)
-	print("     Price: $" + item.currentprice.string, sep='')
+print(aspects[0])
+print("\n" + "NUMBER OF ASPECTS:" + str(len(aspects)) + "\n")
+
+count = 0
+for aspect in aspects:
+	print("TYPE: " + aspect['name'])
+	valuehistograms = aspect.find_all('valuehistogram')
+	print("VALUES:")
+	for valuename in valuehistograms:
+		print(" " + valuename['valuename'])
 	count += 1
+	print()
+
+# DEBUG - list out item information
+# count = 1
+# for item in items:
+# 	print(str(count), ": ", item.title.string)
+# 	print("Price: $" + item.currentprice.string, "\n", sep='')
+# 	count += 1
 
 
 
