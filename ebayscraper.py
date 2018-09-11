@@ -11,19 +11,25 @@ from ebaysdk.finding import Connection as Finding
 from ebaysdk.exception import ConnectionError
 import html.parser
 
+# INPUTS
+	# Get keywords to search with from user (or hard-coded for testing)
+Keywords = input("Enter a search term: ")
 
-# Get keywords to search with from user (or hard-coded for testing)
-Keywords = input("Enter a search term: \n")
+	# Get the type of search the user would like
+outputSelection = input("Would you like \n (a) a list of items or \n (b) an aspect histogram? ")
+if outputSelection is "a":
+	outputSelection = "SellerInfo"
+if outputSelection is "b":
+	outputSelection = "AspectHistogram"
 
 # Initialize the Finding api from ebaysdk with my appid
-api = Finding(appid='WillGree-Scraper-PRD-d8bba853c-c16e72d4', config_file=None)
+api = Finding(appid='[ADD YOUR OWN]', config_file=None)
 
 # Generate a searchRequest dictionary with all appropriate attributes (consider making this
 # customizable later)
 searchRequest = { 
 	'keywords':Keywords,
-	'outputSelector':'SellerInfo',
-	'outputSelector':'AspectHistogram',
+	'outputSelector':outputSelection,
 	'paginationInput': { 'entriesPerPage':100 },
 	# 'itemFilter': { 'HideDuplicateItems':True }
 }
@@ -49,12 +55,13 @@ numTotalEntries = responseDict['paginationOutput']['totalEntries']
 currPage = responseDict['paginationOutput']['pageNumber']
 
 # DEBUG - print search information
-print("Number of Total Pages to Search: " + str(numTotalPages))
+print("Number of Total Pages to Search: " + numTotalPages)
 print("Number of Total Entries: " + numTotalEntries)
 print("Current Page: " + str(currPage))
 
-# Loop over subsequent pages in the search, 100 entries per page
-for page in range(1, 10):
+# Loop over subsequent pages in the search, 100 entries per page, up to 10 pages
+pageNum = 1
+while pageNum < 1 and pageNum < int(numTotalPages):
 	try:
 		response = api.next_page()
 		responseSoup = soup(response.content, 'html.parser')
@@ -64,6 +71,7 @@ for page in range(1, 10):
 
 		currPage = responseDict['paginationOutput']['pageNumber']
 		print("Current Page: " + str(currPage))
+		pageNum += 1
 	except ConnectionError as e:
 		print(e)
 
@@ -75,7 +83,7 @@ for page in range(1, 10):
 # DEBUG
 print("Number of items: " + str(len(items)))
 
-print(aspects[0])
+# ASPECTS PRINT
 print("\n" + "NUMBER OF ASPECTS:" + str(len(aspects)) + "\n")
 
 count = 0
@@ -88,12 +96,18 @@ for aspect in aspects:
 	count += 1
 	print()
 
-# DEBUG - list out item information
-# count = 1
-# for item in items:
-# 	print(str(count), ": ", item.title.string)
-# 	print("Price: $" + item.currentprice.string, "\n", sep='')
-# 	count += 1
+# ITEM INFO PRINT
+if outputSelection is "SellerInfo":
+	count = 1
+	for item in items:
+
+		print(str(count), ": ", item.title.string)
+		print("Price: $" + item.currentprice.string, sep='')
+		print("Seller: " + item.sellerusername.text)
+		print("Listing Type: " + item.listingtype.string)
+		print("url: " + item.viewitemurl.string, "\n")
+		# print("Condition:" + item.conditiondisplayname.string)
+		count += 1
 
 
 
